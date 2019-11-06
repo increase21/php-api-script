@@ -33,13 +33,14 @@ class router
         $this->userData = $authData;
     }
 
+    //  the method to run the file requested
     public function run()
     {
+        $file_name = strval($this->endpoint[1]);
+        $method_name = strval($this->endpoint[2]);
         include_once $this->file_path;
-        $ex = new $this->endpoint[1]($this->method, $this->data, $this->userData);
-        if (is_callable([$ex, $this->endpoint[2]])) {
-            $str_action = strval($this->endpoint[2]);
-            $ex->$str_action();
+        if (method_exists($file_name, $method_name)) {
+            $file_name::$method_name($this->method, $this->data, $this->userData);
         } else {
             exit(helper::Output_Error(404));
         }

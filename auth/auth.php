@@ -5,40 +5,40 @@ include_once './helpers/db.php';
 class auth
 {
     private static $header;
-    public static $authorization;
+    public static $auth_key;
 
-    public function __construct($header = null, $header_prop = null)
+    public function __construct($header = null, $require_auth = false)
     {
-        if (!is_null($header_prop)) {
-            if (!array_key_exists($header_prop, $header)) {
-                exit(helper::Output_Error(401, 'Auth header not set'));
-            }
-            self::$header = $header;
-            self::$authorization = $header[$header_prop];
-        } else {
+        //  Checking if the application requires Authentication
+        if ($require_auth === false) {
             return [];
         }
+        self::$header = $header;
     }
 
     // check Authorization header
-    public static function Check_Auth($auth_regex = null)
+    public static function Check_Auth($header_prop = null, $header_prop_regex = null)
     {
+        if (!array_key_exists($header_prop, self::$header)) {
+            exit(helper::Output_Error(401, 'Auth header not set'));
+        }
+
         //  check whether the auth header is empty
-        if (empty(self::$authorization)) {
+        if (empty(self::$header[$header_prop])) {
             exit(helper::Output_Error(401, 'Auth header not submitted'));
         }
         //   check whether the submitted auth match the regex
-        if (!is_null($auth_regex) && !preg_match($auth_regex, self::$authorization)) {
-            helper::Output_Error(401, 'Invalid authorization header');
-            exit;
+        if (!is_null($header_prop_regex) && !preg_match($header_prop_regex, self::$header[$header_prop])) {
+            exit(helper::Output_Error(401, 'Invalid auth header'));
         }
+        self::$auth_key = self::$header[$header_prop];
         // if there is no connection, establish a connection
         if (!db::$conn) {
             db::Connection();
         }
         //Query statement prepared
         $sql = 'SELECT * FROM `cecula_apps` WHERE `api_key` = ?';
-        $check_key = db::Prepare($sql, 's', substr(self::$authorization, 7));
+        $check_key = db::Prepare($sql, 's', substr(self::$auth_key, 7));
         // check result set if it returns query error
         if (array_key_exists('error', $check_key)) {
             exit(helper::Output_Error(500));
@@ -52,7 +52,7 @@ class auth
     }
 
     // check the IP connection
-    public static function Check_IP(array $require_ip)
+    public static function Check_IPAddress(array $require_ip)
     {
         $request_ip = $_SERVER['REMOTE_ADDR']; // get the request IP
         //   check if the IP does not exist in the required IPs
