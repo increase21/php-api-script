@@ -10,7 +10,7 @@ class db
     public static $conn;
 
     // function to establis a database connection
-    public static function Connection($hostname = null, $username = null, $password = null, $database = null)
+    public static function Create_Connection($hostname = null, $username = null, $password = null, $database = null)
     {
         self::$host = is_null($hostname) ? DB_HOST : $hostname;
         self::$user = is_null($username) ? DB_USER : $username;
@@ -23,33 +23,14 @@ class db
         }
     }
 
-    // function to execute a preapre query statement
-    public static function Prepare($prepared_statemet, $param_type, ...$param_values)
-    {
-        if ($query = self::$conn->prepare($prepared_statemet)) {
-            $query->bind_param($param_type, ...$param_values);
-            $query->execute();
-            $result = $query->get_result();
-            // check if there is no record
-            if ($query->affected_rows < 1) {
-                return [];
-            }
-            // get all the results set
-            while ($row = $result->fetch_object()) {
-                $arr[] = $row;
-            }
-
-            return $arr;
-        } else {
-            // return error from the query
-            return ['error' => mysqli_error(self::$conn)];
-        }
-    }
-
     // function to execute Raw Query statement
-    public static function Query($statemet)
+    public static function Db_Query($statemet, $type = null)
     {
         if ($ex = self::$conn->query($statemet)) {
+            // check if the query type is present and it's not a select query
+            if (isset($type) && $type !== 'select') {
+                return $ex;
+            }
             // check if there is no roll fetched;
             if ($ex->num_rows === 0) {
                 return [];

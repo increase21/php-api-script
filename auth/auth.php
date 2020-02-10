@@ -34,13 +34,15 @@ class auth
         self::$auth_key = self::$header[$header_prop];
         // if there is no connection, establish a connection
         if (!db::$conn) {
-            db::Connection();
+            db::Create_Connection();
         }
         //Query statement prepared
-        $sql = 'SELECT * FROM `cecula_apps` WHERE `api_key` = ?';
-        $check_key = db::Prepare($sql, 's', substr(self::$auth_key, 7));
+        $sql = sprintf("SELECT * FROM `cecula_apps` WHERE `api_key` = '%s'", substr(self::$auth_key, 7));
+        $check_key = db::Db_Query($sql);
+
         // check result set if it returns query error
         if (array_key_exists('error', $check_key)) {
+            var_dump($check_key);
             exit(helper::Output_Error(500));
         }
         // check if there is no record

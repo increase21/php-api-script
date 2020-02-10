@@ -2,7 +2,7 @@
 
 class validator
 {
-    public function is_empty($input)
+    public static function is_empty($input)
     {
         return empty($input);
     }
@@ -56,5 +56,10 @@ class validator
     public static function Is_Number($input)
     {
         return is_numeric($input);
+    }
+
+    public static function Is_Email($input)
+    {
+        return filter_var($input, FILTER_VALIDATE_EMAIL);
     }
 }
